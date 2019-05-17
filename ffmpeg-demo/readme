@@ -1,0 +1,7 @@
+demos from ffmpeg tutorials.
+also seen in doc/examples/
+
+------
+seems two demos in decode_audio and decode_video
+encounter issues when call avcodec_send_packet()
+related with av_parser_parse2()? avcodec not match packet?

@@ -1,0 +1,11 @@
+package fang;
+
+message Persion {
+    required string name = 1;
+    required int32 age = 2;
+}
+
+message AddressBook {
+    optional bool bList=2[default = false];
+    repeated Persion persion = 1;
+}
