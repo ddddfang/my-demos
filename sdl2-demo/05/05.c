@@ -3,8 +3,9 @@
 //05_Optimized Surface Loading and Soft Stretching
 //06_extension_libraries_and_loading_other_image_formats
 //Using SDL and standard IO 
-#include <SDL.h> 
-#include <stdio.h> 
+#include <SDL.h>
+#include <SDL_image.h>
+#include <stdio.h>
 
 //Screen dimension constants 
 const int SCREEN_WIDTH = 640; 
@@ -40,7 +41,7 @@ int init()
 	//Initialize SDL 
 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
 		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
-		success = 1;
+		success = 0;
 	} else { 
 		//Create window 
 		gWindow = SDL_CreateWindow( "SDL Tutorial", 
@@ -53,7 +54,14 @@ int init()
 			success = 0;
 		} else {
 			//Get window surface
-			gScreenSurface = SDL_GetWindowSurface( gWindow ); 
+			gScreenSurface = SDL_GetWindowSurface( gWindow );
+
+			//Initialize PNG loading , will use SDL_image library
+			int imgFlags = IMG_INIT_PNG;
+			if( !( IMG_Init( imgFlags ) & imgFlags ) ) {
+				printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
+				success = 0;
+			}
 		}
 	}
 	return success;
@@ -66,7 +74,8 @@ SDL_Surface* loadSurface(char *path)
 
 	//Load image at specified path ,when you load a bitmap, 
 	//it's typically loaded in a 24bit format since most bitmaps are 24bit.
-	SDL_Surface* loadedSurface = SDL_LoadBMP( path );
+	//SDL_Surface* loadedSurface = SDL_LoadBMP( path );	//use sdl API to load bmp picture
+	SDL_Surface* loadedSurface = IMG_Load( path );	//use SDL_image API to load png picture
 	if( loadedSurface == NULL ) {
 		printf( "Unable to load image %s! SDL Error: %s\n", path, SDL_GetError() );
 	} else {
@@ -92,22 +101,26 @@ int loadMedia()
 		printf( "Failed to load default image!\n" );
 		success = 0;
 	}
-	gKeyPressSurfaces[ KEY_PRESS_SURFACE_UP ] = loadSurface( "./pics/up.bmp" );
+	//gKeyPressSurfaces[ KEY_PRESS_SURFACE_UP ] = loadSurface( "./pics/up.bmp" );
+	gKeyPressSurfaces[ KEY_PRESS_SURFACE_UP ] = loadSurface( "./pics/up.png" );
 	if(	gKeyPressSurfaces[ KEY_PRESS_SURFACE_UP ] == NULL ) {
 		printf( "Failed to load default image!\n" );
 		success = 0;
 	}
-	gKeyPressSurfaces[ KEY_PRESS_SURFACE_DOWN ] = loadSurface( "./pics/down.bmp" );
+	//gKeyPressSurfaces[ KEY_PRESS_SURFACE_DOWN ] = loadSurface( "./pics/down.bmp" );
+	gKeyPressSurfaces[ KEY_PRESS_SURFACE_DOWN ] = loadSurface( "./pics/down.png" );
 	if(	gKeyPressSurfaces[ KEY_PRESS_SURFACE_DOWN ] == NULL ) {
 		printf( "Failed to load default image!\n" );
 		success = 0;
 	}
-	gKeyPressSurfaces[ KEY_PRESS_SURFACE_LEFT ] = loadSurface( "./pics/left.bmp" );
+	//gKeyPressSurfaces[ KEY_PRESS_SURFACE_LEFT ] = loadSurface( "./pics/left.bmp" );
+	gKeyPressSurfaces[ KEY_PRESS_SURFACE_LEFT ] = loadSurface( "./pics/left.png" );
 	if(	gKeyPressSurfaces[ KEY_PRESS_SURFACE_LEFT ] == NULL ) {
 		printf( "Failed to load default image!\n" );
 		success = 0;
 	}
-	gKeyPressSurfaces[ KEY_PRESS_SURFACE_RIGHT ] = loadSurface( "./pics/right.bmp" );
+	//gKeyPressSurfaces[ KEY_PRESS_SURFACE_RIGHT ] = loadSurface( "./pics/right.bmp" );
+	gKeyPressSurfaces[ KEY_PRESS_SURFACE_RIGHT ] = loadSurface( "./pics/right.png" );
 	if(	gKeyPressSurfaces[ KEY_PRESS_SURFACE_RIGHT ] == NULL ) {
 		printf( "Failed to load default image!\n" );
 		success = 0;

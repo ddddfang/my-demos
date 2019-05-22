@@ -9,7 +9,7 @@ OUT_DIR = .
 PUBLIC_FLAGS:=-g -O0 -Wall -std=gnu99
 
 LDFLAGS = -lm -lz -lpthread  
-LDFLAGS+= -lSDL2 -L/usr/local/lib
+LDFLAGS+= -lSDL2 -lSDL2_image -L/usr/local/lib
 MODULE_INCLUDE = -I.
 MODULE_INCLUDE+= -I/usr/local/include/SDL2
 
