@@ -1,6 +1,8 @@
 http://lazyfoo.net/tutorials/SDL/
 http://www.grhmedia.com/tutorials_SDL2.html
 
+05 08
+
 
 SDL_Surface:(02)
 An SDL surface is just an image data type that contains the pixels of an image along with all data needed to render it
