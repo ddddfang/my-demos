@@ -36,7 +36,12 @@ shared_ptr<LTexture> gFooTexture;
 shared_ptr<LTexture> gBackgroundTexture;
 shared_ptr<LTexture> gDotsTexture;
 shared_ptr<LTexture> gModulatedTexture;
+shared_ptr<LTexture> gFadeModulatedTexture;
+shared_ptr<LTexture> gFadeBackgroundTexture;
 SDL_Rect gSpriteClips[ 4 ];
+shared_ptr<LTexture> gSpriteSheetWalkTexture;
+const int WALKING_ANIMATION_FRAMES = 4; 
+SDL_Rect gSpriteWalkClips[ WALKING_ANIMATION_FRAMES ];
 
 /************************** util func ****************************/
 bool init()
@@ -62,8 +67,10 @@ bool init()
 			printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
 			success = false;
 		} else {
-			//create renderer for window
-			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+			//create renderer for window.VSync allows the rendering to update at the same time 
+			//as when your monitor updates during vertical refresh. most monitors run at 60fps
+			//gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
 			if(gRenderer == NULL){
 				printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
 				success = false;
@@ -88,6 +95,9 @@ bool init()
 		gBackgroundTexture.reset(new LTexture());
 		gDotsTexture.reset(new LTexture());
 		gModulatedTexture.reset(new LTexture());
+		gFadeModulatedTexture.reset(new LTexture());
+		gFadeBackgroundTexture.reset(new LTexture());
+		gSpriteSheetWalkTexture.reset(new LTexture());
 	}
 	return success;
 }
@@ -115,6 +125,7 @@ bool loadMedia()
 		printf( "Failed to load right image!\n" );
 		success = false;
 	}
+	//----------
 	if( !gFooTexture->loadFromFile( gRenderer, "./pics/foo.png" ) ){
 		printf( "Failed to load foo image!\n" );
 		success = false;
@@ -123,6 +134,7 @@ bool loadMedia()
 		printf( "Failed to load background image!\n" );
 		success = false;
 	}
+	//----------
 	if( !gDotsTexture->loadFromFile( gRenderer, "./pics/dots.png" ) ){
 		printf( "Failed to load dots image!\n" );
 		success = false;
@@ -148,9 +160,53 @@ bool loadMedia()
 		gSpriteClips[ 3 ].w = 100;
 		gSpriteClips[ 3 ].h = 100;
 	}
+	//----------
 	if( !gModulatedTexture->loadFromFile( gRenderer, "./pics/colors.png" ) ){
 		printf( "Failed to load colors image!\n" );
 		success = false;
+	}
+	//----------
+	//Load front alpha texture, fang: after fade out( with alpha), background will show ??
+	if( !gFadeModulatedTexture->loadFromFile( gRenderer, "./pics/fadeout_front.png" ) )
+	{
+		printf( "Failed to load front texture!\n" );
+		success = false;
+	}
+	else
+	{
+		//Set standard alpha blending
+		gFadeModulatedTexture->setBlendMode( SDL_BLENDMODE_BLEND );
+	}
+
+	//Load background texture
+	if( !gFadeBackgroundTexture->loadFromFile( gRenderer, "./pics/fadein_back.png" ) )
+	{
+		printf( "Failed to load background texture!\n" );
+		success = false;
+	}
+	//----------
+	//load walk texture
+	if( !gSpriteSheetWalkTexture->loadFromFile( gRenderer, "./pics/walk.png" ) )
+	{
+		printf( "Failed to load background texture!\n" );
+		success = false;
+	} else {
+		gSpriteWalkClips[0].x = 0;		//
+		gSpriteWalkClips[0].y = 0;
+		gSpriteWalkClips[0].w = 64;
+		gSpriteWalkClips[0].h = 205;
+		gSpriteWalkClips[1].x = 64;		//
+		gSpriteWalkClips[1].y = 0;
+		gSpriteWalkClips[1].w = 64;
+		gSpriteWalkClips[1].h = 205;	//
+		gSpriteWalkClips[2].x = 128;
+		gSpriteWalkClips[2].y = 0;
+		gSpriteWalkClips[2].w = 64;
+		gSpriteWalkClips[2].h = 205;	//
+		gSpriteWalkClips[3].x = 196;
+		gSpriteWalkClips[3].y = 0;
+		gSpriteWalkClips[3].w = 64;
+		gSpriteWalkClips[3].h = 205;
 	}
 	return success;
 }
@@ -158,6 +214,9 @@ bool loadMedia()
 void deinit() 
 {
 	//free LTexture.
+	gSpriteSheetWalkTexture = nullptr;
+	gFadeBackgroundTexture = nullptr;
+	gFadeModulatedTexture = nullptr;
 	gModulatedTexture = nullptr;
 	gDotsTexture = nullptr;
 	gFooTexture = nullptr;
@@ -317,6 +376,61 @@ int main( int argc, char* args[] )
 			SDL_RenderPresent( gRenderer );
 		}
 #endif
+#if 0	//use alpha to fade DEMO
+		Uint8 a = 255;
+		while(quit == false){
+			while(SDL_PollEvent(&event) != 0){	//poll the event queue
+				if(event.type == SDL_QUIT){
+					printf( "Quit!\n" );
+					quit = true;
+				}
+				if(event.type == SDL_KEYDOWN){
+					switch(event.key.keysym.sym){
+						case SDLK_w:
+							a = ((a+32)>255)?255:(a+32);
+							break;
+						case SDLK_s:
+							a = ((a-32)<0)?0:(a-32);
+							break;
+						default :
+							break;
+					}
+				}
+			}
+
+			//Clear screen
+			SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+			SDL_RenderClear( gRenderer );
+			gFadeBackgroundTexture->render( gRenderer,0,0);
+			//render front blended, so it will cover background, for now.
+			gFadeModulatedTexture->setAlpha(a);
+			gFadeModulatedTexture->render( gRenderer,0,0);
+			//Update screen
+			SDL_RenderPresent( gRenderer );
+		}
+#endif
+		int frame = 0;
+		int clipindex = 0;
+		while(quit == false){
+			while(SDL_PollEvent(&event) != 0){	//poll the event queue
+				if(event.type == SDL_QUIT){
+					printf( "Quit!\n" );
+					quit = true;
+				}
+			}
+			//Clear screen
+			SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+			SDL_RenderClear( gRenderer );
+				SDL_Rect* currentClip = &gSpriteWalkClips[ clipindex ];
+				gSpriteSheetWalkTexture->render(	gRenderer, 
+													( SCREEN_WIDTH - currentClip->w ) / 2,
+													( SCREEN_HEIGHT - currentClip->h ) / 2,
+													currentClip );
+			//Update screen
+			SDL_RenderPresent( gRenderer );
+			frame++;
+			clipindex = (frame/6)%WALKING_ANIMATION_FRAMES;//60fps/6 = 10fps
+		}
 	}
 
 	//Free resources and close SDL 
