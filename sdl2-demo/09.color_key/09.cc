@@ -1,11 +1,6 @@
 //SDL_image package: https://www.libsdl.org/projects/SDL_image/release/
 //http://lazyfoo.net/tutorials/SDL/10_color_keying/index.php
 
-//use SDL texture and renderer to 
-//	1.load images 
-//	2.render rect/line/point
-//	3.set viewport
-
 //Using SDL and standard IO 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -40,6 +35,7 @@ shared_ptr<LTexture> gKeyPressTextures[ KEY_PRESS_SURFACE_TOTAL ];
 shared_ptr<LTexture> gFooTexture;
 shared_ptr<LTexture> gBackgroundTexture;
 shared_ptr<LTexture> gDotsTexture;
+shared_ptr<LTexture> gModulatedTexture;
 SDL_Rect gSpriteClips[ 4 ];
 
 /************************** util func ****************************/
@@ -51,7 +47,11 @@ bool init()
 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
 		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
 		success = false;
-	} else { 
+	} else {
+		//Set texture filtering to linear
+		if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" ) ) {
+			printf( "Warning: Linear texture filtering not enabled!" );
+		}
 		//Create window 
 		gWindow = SDL_CreateWindow( "SDL Tutorial", 
 						SDL_WINDOWPOS_UNDEFINED,
@@ -87,6 +87,7 @@ bool init()
 		gFooTexture.reset(new LTexture());
 		gBackgroundTexture.reset(new LTexture());
 		gDotsTexture.reset(new LTexture());
+		gModulatedTexture.reset(new LTexture());
 	}
 	return success;
 }
@@ -147,12 +148,17 @@ bool loadMedia()
 		gSpriteClips[ 3 ].w = 100;
 		gSpriteClips[ 3 ].h = 100;
 	}
+	if( !gModulatedTexture->loadFromFile( gRenderer, "./pics/colors.png" ) ){
+		printf( "Failed to load colors image!\n" );
+		success = false;
+	}
 	return success;
 }
 
 void deinit() 
 {
 	//free LTexture.
+	gModulatedTexture = nullptr;
 	gDotsTexture = nullptr;
 	gFooTexture = nullptr;
 	gBackgroundTexture = nullptr;
@@ -236,6 +242,7 @@ int main( int argc, char* args[] )
 			SDL_RenderPresent( gRenderer );
 		}
 #endif
+#if 0	//sprite_sheet DEMO
 		while(quit == false){
 			while(SDL_PollEvent(&event) != 0){	//poll the event queue
 				if(event.type == SDL_QUIT){
@@ -258,6 +265,58 @@ int main( int argc, char* args[] )
 			//Update screen
 			SDL_RenderPresent( gRenderer );
 		}
+#endif
+#if 0	//color modulation DEMO
+		//Modulation components
+		Uint8 r = 128;
+		Uint8 g = 128;
+		Uint8 b = 128;
+		while(quit == false){
+			while(SDL_PollEvent(&event) != 0){	//poll the event queue
+				if(event.type == SDL_QUIT){
+					printf( "Quit!\n" );
+					quit = true;
+				}
+				if(event.type == SDL_KEYDOWN){
+					switch(event.key.keysym.sym){
+						//increase red.
+						case SDLK_q:
+							r += 32;
+							break;
+						case SDLK_a:
+							r -= 32;
+							break;
+						//increase green
+						case SDLK_w:
+							g += 32;
+							break;
+						case SDLK_s:
+							g -= 32;
+							break;
+						//increase blue
+						case SDLK_e:
+							b += 32;
+							break;
+						case SDLK_d:
+							b -= 32;
+							break;
+						default :
+							break;
+					}
+				}
+			}
+
+			//Clear screen
+			SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+			SDL_RenderClear( gRenderer );
+			//gModulatedTexture->setColor(r,g,b);
+			//gModulatedTexture->render( gRenderer,0,0);
+			gBackgroundTexture->setColor(r,g,b);
+			gBackgroundTexture->render( gRenderer,0,0);
+			//Update screen
+			SDL_RenderPresent( gRenderer );
+		}
+#endif
 	}
 
 	//Free resources and close SDL 
