@@ -3,6 +3,8 @@
 03 展示含有 demux 功能的 动态pipeline 如何在 pad-added 回调函数中组建pipeline
 04 展示单独创建一个playbin(没有和其他element组pipeline),对这个playbin进行时长控制(current/duration 查询,seek)
 05 展示pad caps, template中的,以及playing状态下的
+06 展示如何获取stream info并将其打印
+07 展示控制一个playbin的播放速度
 
 
 https://www.cnblogs.com/xleng/tag/gstreamer/
