@@ -5,6 +5,8 @@
 05 展示pad caps, template中的,以及playing状态下的
 06 展示如何获取stream info并将其打印
 07 展示控制一个playbin的播放速度
+08 展示gstreamer使用queue插件实现多线程工作
+09 展示了如何使用 appsrc 和 appsink 编程实现向 pipeline 灌数据和从 pipeline 取数据
 
 
 https://www.cnblogs.com/xleng/tag/gstreamer/
