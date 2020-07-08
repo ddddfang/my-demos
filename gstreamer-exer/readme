@@ -7,6 +7,8 @@
 07 展示控制一个playbin的播放速度
 08 展示gstreamer使用queue插件实现多线程工作
 09 展示了如何使用 appsrc 和 appsink 编程实现向 pipeline 灌数据和从 pipeline 取数据
+10 展示 缓冲进度 和 时钟丢失处理
+11 展示gstreamer和qt的集成
 
 
 https://www.cnblogs.com/xleng/tag/gstreamer/
