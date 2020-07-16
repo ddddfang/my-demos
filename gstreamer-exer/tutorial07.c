@@ -143,7 +143,8 @@ int main (int argc, char *argv[]) {
 
     /* Create a GLib Main Loop and set it to run */
     data.loop = g_main_loop_new (NULL, FALSE);  //这样就可以控制是否在此阻塞
-    g_main_loop_run (data.loop);                //先在此阻塞(退出可以直接调用 g_main_loop_quit)
+    g_main_loop_run (data.loop);                //先在此阻塞(退出可以直接调用 g_main_loop_quit),可以创建一个线程运这句话,这样gstreamer就异步运行在新创建的线程中,
+                                                //再写一个stop函数完成下面的资源释放操作即可
 
     /* Free resources */
     g_main_loop_unref (data.loop);
