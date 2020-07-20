@@ -1,0 +1,85 @@
+https://gstreamer.freedesktop.org/documentation/plugin-development/basics/boiler.html?gi-language=c
+
+git clone https://gitlab.freedesktop.org/gstreamer/gst-template.git
+
+    commit 68102a52e3db4825cbefa91407474b913d9d26ab
+    Author: Edward Hervey <edward@centricular.com>
+    Date:   Tue May 12 18:00:25 2020 +0200
+
+        gst-plugin: Update comment
+
+    commit 22e51b0972ab4f01647fa1087a9e8104442e2167
+    Author: Edward Hervey <edward@centricular.com>
+    Date:   Tue May 12 17:58:13 2020 +0200
+
+        gst-plugin: Move instructions up to main README
+
+        And remove no-longer needed NEWS file
+
+
+
+------------------------------------------------------------------------------------------
+
+    make_element 是生成模板代码的工具, make_element <plugname> <srcfilename>
+
+    cd gst-template/gst-plugin/src
+    ../tools/make_element FangFilter  #默认情况是基于 gstplugin.c.h 产生插件模板代码的,即相当于下面这样:
+    ../tools/make_element FangFilter gstplugin      #基于 gstplugin.c.h 产生插件模板代码,生成 gstfangfilter.c.h
+    ../tools/make_element FangFilter gstaudiofilter #基于 gstaudiofilter.c 产生插件模板代码,生成 gstfangfilter.c
+    ../tools/make_element FangFilter gsttransform   #基于 gsttransform.c.h 产生插件模板代码,生成 gstfangfilter.c.h
+
+    或者 cd gst-template/gst-plugin/tools
+    ./make_element FangFilter ../src/gstplugin 
+
+
+    最后我决定, 在 gst-template/gst-plugin/ 目录下创建一个 myplugins 目录
+    cd gst-template/gst-plugin/myplugins
+    ./make_element FangFilter ../src/gstplugin 
+    ../tools/make_element FangFilter ../src/gstplugin
+
+    ok
+    <最终我还是使用了 官网上解说 tutorials 中的那份代码>
+
+
+------------------------------------------------------------------------------------------
+
+
+    现在比较好的方式是使用 gst-plugins-bad 提供的 gst-element-maker 创建 element
+    cd /home/fang/gstreamer/gst-plugins-bad-1.16.2/tools
+    ./gst-element-maker --help
+    <但是这个我没有使用>
+
+------------------------------------------------------------------------------------------
+
+
+    安装meson和ninja,(据说可以替换make的,流行的)构建工具
+    cd ~
+    git clone https://github.com/mesonbuild/meson.git
+    git clone git://github.com/ninja-build/ninja.git && cd ninja && git checkout release
+    ./configure.py --bootstrap && sudo cp ninja /usr/local/bin
+
+------------------------------------------------------------------------------------------
+
+    cd gst-template
+    修改 meson.build 和 plugin 下的 meson.build
+
+    conda activate pyth36
+    /home/fang/meson/meson.py meson_build
+    cd meson_build && ninja (或者直接 ninja -C meson_build/)
+
+    conda deactivate
+    sudo cp libgstmyfilter.so /usr/local/lib/gstreamer-1.0/
+
+
+------------------------------------------------------------------------------------------
+
+测试一下
+gst-inspect-1.0 myfilter
+
+gst-launch-1.0 videotestsrc pattern=0 ! myfilter ! xvimagesink
+gst-launch-1.0 videotestsrc pattern=0 ! myfilter silent=TRUE ! xvimagesink
+
+
+中间过程中 pkg-config 这个ubuntu工具查看软件包还是很好用的
+
+
