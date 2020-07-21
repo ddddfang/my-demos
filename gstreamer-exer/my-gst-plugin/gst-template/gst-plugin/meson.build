@@ -40,7 +40,7 @@ gstaudiofilterexample = library('gstaudiofilterexample',
 
 # Fang filter
 myfilter_sources = [
-  'myplugins/gstmyfilter.c'
+  'myplugins/gstmyfilter01.c'
   ]
 
 gstmyfilterexample = library('gstmyfilter',
