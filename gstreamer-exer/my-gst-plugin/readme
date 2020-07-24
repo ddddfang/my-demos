@@ -82,4 +82,9 @@ gst-launch-1.0 videotestsrc pattern=0 ! myfilter silent=TRUE ! xvimagesink
 
 中间过程中 pkg-config 这个ubuntu工具查看软件包还是很好用的
 
+------------------------------------------------------------------------------------------
 
+myfilter plugin:
+
+01 展示了一个 plugin 的 基本骨架
+02 在01基础上展示了 query / event / change_state 函数用法,和一些详细的说明

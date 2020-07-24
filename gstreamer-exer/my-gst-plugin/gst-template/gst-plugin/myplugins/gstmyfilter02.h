@@ -9,7 +9,7 @@ G_BEGIN_DECLS
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstMyFilter {
-    GstElement element;
+    GstElement element; //继承自 GstElement,此成员应作为class中第一个成员,且需要在 G_DEFINE_TYPE 中指明 GstElement 是父类
 
     GstPad *sinkpad, *srcpad;
 
