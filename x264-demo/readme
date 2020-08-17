@@ -1,0 +1,11 @@
+
+安装x264直接参看我的 ffmpeg 安装 blog
+注意一点就是将 ./configure --enable-shared --enable-static --enable-strip --disable-cli --disable-asm
+选项中的 --disable-cli 去掉,这样才可以编译处 x264 命令行工具
+
+学习:
+/home/fang/ffmpeg/x264-master/example.c
+
+https://lazybing.github.io/blog/categories/x264/
+https://blog.csdn.net/leixiaohua1020/article/details/45536607
+

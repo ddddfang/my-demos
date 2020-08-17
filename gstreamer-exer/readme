@@ -11,7 +11,19 @@
 11 展示gstreamer和qt的集成
 
 
+basic tutorials:
 https://www.cnblogs.com/xleng/tag/gstreamer/
 https://gstreamer.freedesktop.org/documentation/tutorials/basic/index.html?gi-language=c
 https://gitlab.freedesktop.org/gstreamer/gst-docs, or https://github.com/GStreamer/gst-docs
+
+plugins tutorials:
+https://gstreamer.freedesktop.org/documentation/plugin-development/basics/boiler.html?gi-language=c (其中的代码似乎有些过时,且code不全均为片段)
+
+
+gst核心手册
+file:///home/fang/gstreamer/gstreamer-1.16.2/docs/gst/html/libgstreamer.html
+base api 手册
+file:///home/fang/gstreamer/gst-plugins-base-1.16.2/docs/libs/html/index.html
+base plugins 手册
+file:///home/fang/gstreamer/gst-plugins-base-1.16.2/docs/plugins/html/index.html
 
