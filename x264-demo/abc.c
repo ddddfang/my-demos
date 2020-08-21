@@ -59,9 +59,9 @@ int main(int argc, char** argv)
     param.i_csp = X264_CSP_I420;
     param.i_width  = width;
     param.i_height = height;
-    param.b_vfr_input = 0;
-    param.b_repeat_headers = 1;
-    param.b_annexb = 1;
+    param.b_vfr_input = 0;      //b_vfr_input 指定是否使用时间戳用于帧率控制
+    param.b_repeat_headers = 1; //b_repeat_headers 指定是否在每个关键帧前添加 SPS/PPS 信息
+    param.b_annexb = 1;         //b_annexb 指定在每个 NAL 前添加起止码或者 NAL 大小
 //    x264_param_default(pParam);
 //    pParam->i_threads = X264_SYNC_LOOKAHEAD_AUTO;
 //    pParam->i_frame_total = 0;
@@ -115,7 +115,7 @@ int main(int argc, char** argv)
     }
 
     /* Flush delayed frames */
-    while( x264_encoder_delayed_frames( h ) ) {
+    while( x264_encoder_delayed_frames( h ) ) { //将编码器内缓存的数据编码完成
         i_frame_size = x264_encoder_encode( h, &nal, &i_nal, NULL, &pic_out );
         if( i_frame_size < 0 )
             goto fail3;

@@ -1,0 +1,82 @@
+
+代码参考
+https://blog.csdn.net/leixiaohua1020/article/details/42104893
+
+介绍了 rtmp/rtsp/http 直播技术的区别,和常用的服务器网站
+https://blog.csdn.net/u014162133/article/details/81188410
+
+编译 librtmp:
+进入 rtmpdump-2.3 直接 make && make install
+
+然后还需要搭建一个流媒体服务器,使用docker,参考我的blog
+https://blog.csdn.net/ddddfang/article/details/90483165
+https://blog.csdn.net/ddddfang/article/details/89209461
+
+
+
+--------------------------下面是我在本地的实验(点播)------------------------------------------
+
+111111111.先自己搞一个image:
+
+docker run -ti -v /:/mnt:rw ubuntu /bin/bash
+
+apt-get update 
+apt-get install libpcre3 libpcre3-dev libssl-dev zlib1g-dev
+apt-get install build-essential git wget vim
+
+wget https://nginx.org/download/nginx-1.9.9.tar.gz
+git clone https://github.com/arut/nginx-rtmp-module.git
+wget https://www.openssl.org/source/openssl-1.0.2p.tar.gz
+
+进入nginx,创建 extra目录并将 nginx-rtmp-module 放到其中,
+./configure --with-http_ssl_module --with-openssl=/root/openssl-1.0.2p --add-module=./extra/nginx-rtmp-module
+make && make install  (百度解决编译错误)
+
+配置 /usr/local/nginx/conf/nginx.conf
+# rtmp server
+rtmp {
+    server {
+        listen 1935;
+        chunk_size 4096;
+
+        application live {
+            live    on;
+            record  off;
+        }
+        application vod {
+            play /mnt/home/fang/testvideo;
+        }
+    }
+}
+
+
+完成后推出，将container保存为 nginx_rtmp image
+
+
+22222222222.使用我们的这个image
+sudo docker run -ti -v /:/mnt:rw -p 8080:80 -p 1935:1935 nginx_rtmp /bin/bash
+进去后执行 
+/usr/local/nginx/sbin/nginx
+
+
+33333333333.docker外使用vlc打开网络传流 (实验看来只支持 mp4 和 flv 格式的视频流)
+rtmp://127.0.0.1:1935/vod/Forrest_Gump_IMAX.mp4
+
+--------------------------下面是我在本地的实验(直播)------------------------------------------
+
+参考 https://blog.csdn.net/leixiaohua1020/article/details/42104893
+注意修改几处代码: 
+fp = fopen("/home/fang/testvideo/hehuoren.flv","rb");
+RTMP_SetupURL(rtmp, "rtmp://127.0.0.1:1935/live");
+
+vlc拉取直播
+rtmp://127.0.0.1:1935/live
+
+
+----------------------------------------------------------------------------------------------
+
+
+
+
+
+
