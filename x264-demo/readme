@@ -9,3 +9,6 @@
 https://lazybing.github.io/blog/categories/x264/
 https://blog.csdn.net/leixiaohua1020/article/details/45536607
 
+
+在 my-exercise/h264 下有一个跟着blog学习的 H264Analysis 分析h264码流的demo
+在 my-demos/ffmpeg-demo/03.encode_video 下有使用ffmpeg将video encode 成 264 码流的demo
