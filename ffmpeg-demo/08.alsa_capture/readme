@@ -1,0 +1,12 @@
+run:
+ffplay test.pcm -f s16le -channels 2 -ar 44100
+
+code 是这里的:
+https://zhuanlan.zhihu.com/p/149483033
+
+这里还有一个alsa架构播放 pcm
+https://blog.csdn.net/fengliang191/article/details/19301635
+
+
+又是一个音视频 fpga的大牛，文章恨全
+https://www.cnblogs.com/lifan3a/articles/4939828.html
