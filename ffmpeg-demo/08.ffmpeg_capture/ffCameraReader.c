@@ -26,6 +26,7 @@ extern "C"
 static int recording;
 
 void stop_recording(int param) {
+    printf("ctrl+c, stop_recording\n");
     recording = 0;
 }
 
@@ -45,7 +46,8 @@ static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
 
 int main(int argc, char *argv[])
 {
-    char *src_device_name = "/dev/video1";
+    int ret;
+    char *src_device_name = "/dev/video0";
     int i, videoindex;
     AVCodecContext *pCodecCtx;
     AVCodec *pCodec;
@@ -102,17 +104,15 @@ int main(int argc, char *argv[])
 
     //原来获取这个stream的 codec 信息是这样的:
     //pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
-    //pCodecCtx = pFormatCtx->streams[videoindex]->codec;   //主要是这一步
+    //pCodecCtx = pFormatCtx->streams[videoindex]->codec;   //主要是这一步,现在被废弃了
 
-    //现在不推荐上面那样,获取这个stream的 codec 信息是这样的:
+    //不推荐上面那样,现在获取这个stream的 codec ctx 信息是这样的:
     pCodec = avcodec_find_decoder(pFormatCtx->streams[videoindex]->codecpar->codec_id);
     if (!pCodec) {
         printf("Codec not found.\n");
         return -1;
     }
-
-    //为 AVCodec 分配一个全新的 AVCodecContext
-    pCodecCtx = avcodec_alloc_context3(pCodec);
+    pCodecCtx = avcodec_alloc_context3(pCodec); //为 AVCodec 分配一个全新的 AVCodecContext
     if (!pCodecCtx) {
         printf("avcodec_alloc_context3 fail.\n");
         return -1;
@@ -131,13 +131,21 @@ int main(int argc, char *argv[])
     AVFrame *pFrame = av_frame_alloc();     //原始 frame, 鬼知道什么格式
     AVFrame *pFrameYUV = av_frame_alloc();  //统一转换为 yuv
     //av_frame_alloc只是分配了一个壳,原始 frame 在decode出来的时候 ffmpeg会为其分配空间,但这里的 frame可就需要我们自己来了
-    unsigned char *frame_yuv_buf = av_malloc(av_image_get_buffer_size(AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1));
-    av_image_fill_arrays(pFrameYUV->data, pFrameYUV->linesize,
-                        frame_yuv_buf, AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1);
-    //pFrameYUV->format = AV_PIX_FMT_YUV420P;
-    //pFrameYUV->width = pCodecCtx->width;
-    //pFrameYUV->height = pCodecCtx->height;
-    //av_frame_get_buffer(pFrameYUV, 32);   //这应该与上面是等价的,ffmpeg/doc/examples/muxing.c 里面就是这样分配的
+    pFrameYUV->format = AV_PIX_FMT_YUV420P;
+    pFrameYUV->width = pCodecCtx->width;
+    pFrameYUV->height = pCodecCtx->height;
+    ret = av_frame_get_buffer(pFrameYUV, 32);   //32字节对齐. ffmpeg/doc/examples/muxing.c 里面就是这样分配的
+    if (ret < 0) {
+        fprintf(stderr, "error when av_frame_get_buffer for YUV\n");
+        return -1;
+    }
+    //理论上下面这样和上面是等价的,但是 sws_scale 出来的结果是 foramt=-1, w=h=0 ?
+    //int yuv_buf_size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1);
+    //uint8_t *frame_yuv_buf = (uint8_t *)av_malloc(yuv_buf_size);
+    //av_image_fill_arrays(   pFrameYUV->data, pFrameYUV->linesize,
+    //                        frame_yuv_buf,
+    //                        AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1);
+
 
     struct SwsContext *img_convert_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt,
                                                         pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P,
@@ -149,7 +157,6 @@ int main(int argc, char *argv[])
 
     recording = 1;
     //int got_picture = 0;
-    int ret;
     char filename_buf[1024];
     while (recording == 1) {
         if (av_read_frame(pFormatCtx, pkt) >= 0) {
@@ -164,12 +171,14 @@ int main(int argc, char *argv[])
                 //                pFrameYUV->data, pFrameYUV->linesize);
                 //}
 
-                ////最新的decode方法
-                //ret = avcodec_send_packet(pCodecCtx, pkt);
-                //if (ret < 0) {
-                //    fprintf(stderr, "Error sending a packet for decoding\n");
-                //    return -1;
-                //}
+                printf("read a video frame, size=%d\n",pkt->size);
+
+                //最新的decode方法
+                ret = avcodec_send_packet(pCodecCtx, pkt);
+                if (ret < 0) {
+                    fprintf(stderr, "Error sending a packet for decoding\n");
+                    return -1;
+                }
 
                 while (ret >= 0) {
                     ret = avcodec_receive_frame(pCodecCtx, pFrame);
@@ -177,29 +186,58 @@ int main(int argc, char *argv[])
                         break;
                     else if (ret < 0) {
                         fprintf(stderr, "Error during decoding\n");
-                        return -1;
+                        recording = 0;
+                        break;
                     }
-                    sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize,
+                    printf("get a decoded frame format=%d, width=%d,height=%d..", pFrame->format,pFrame->width, pFrame->height);
+                    sws_scale(img_convert_ctx, (uint8_t const* const*)pFrame->data, pFrame->linesize,
                                 0, pCodecCtx->height,
                                 pFrameYUV->data, pFrameYUV->linesize);
+                    printf("get a sws_scaled frame format=%d, width=%d,height=%d\n", pFrameYUV->format,pFrameYUV->width, pFrameYUV->height);
                     //the picture is allocated by the decoder. no need to free it
-
 
                     printf("saving frame %3d\n", pCodecCtx->frame_number);
                     fflush(stdout);
                     snprintf(filename_buf, sizeof(filename_buf), "%s-%d", "decoded", pCodecCtx->frame_number);
-                    pgm_save(pFrame->data[0], pFrame->linesize[0], pFrame->width, pFrame->height, filename_buf);
+                    //这里使用 pgm_save 只保存了灰度信息
+                    pgm_save(pFrameYUV->data[0], pFrameYUV->linesize[0], pFrameYUV->width, pFrameYUV->height, filename_buf);
                 }
             }
         }
         usleep(40000);   //40ms
     }
+    //flush decoder
+    pkt->data = NULL;
+    pkt->size = 0;
+    ret = avcodec_send_packet(pCodecCtx, pkt);
+    if (ret < 0) {
+        fprintf(stderr, "Error sending a packet for decoding\n");
+        return -1;
+    }
+    while (ret >= 0) {
+        ret = avcodec_receive_frame(pCodecCtx, pFrame);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+            break;
+        else if (ret < 0) {
+            fprintf(stderr, "Error during decoding\n");
+            break;
+        }
+        sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize,
+                    0, pCodecCtx->height,
+                    pFrameYUV->data, pFrameYUV->linesize);
+
+        printf("saving frame %3d\n", pCodecCtx->frame_number);
+        fflush(stdout);
+        snprintf(filename_buf, sizeof(filename_buf), "%s-%d", "decoded", pCodecCtx->frame_number);
+        pgm_save(pFrame->data[0], pFrame->linesize[0], pFrame->width, pFrame->height, filename_buf);
+    }
 
     sws_freeContext(img_convert_ctx);
-    av_frame_free(&pFrame);
     av_frame_free(&pFrameYUV);
+    av_frame_free(&pFrame);
     avcodec_close(pCodecCtx);
-    avformat_close_input(&pFormatCtx);
+    avcodec_free_context(&pCodecCtx);
+    avformat_close_input(&pFormatCtx);//including avformat_free_context
     av_packet_free(&pkt);
     return 0;
 }
