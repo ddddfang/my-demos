@@ -3,3 +3,7 @@
 1.这里使用 ffmpeg 提供的 api接口 capture video, 由 ffmpeg 来操作 v4l2 底层
 2.这里没有对 capture 得到的video进行编码, 08.alsa_capture 使用 v4l2
   采集 video 后通过 ffmpeg api 调用 x264 进行了编码
+
+
+关于音频的采集,参考这里
+https://blog.csdn.net/quange_style/article/details/90105795

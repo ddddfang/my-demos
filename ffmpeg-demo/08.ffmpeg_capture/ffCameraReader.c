@@ -30,18 +30,18 @@ void stop_recording(int param) {
     recording = 0;
 }
 
-static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
-                     char *filename)
-{
-    FILE *f;
-    int i;
-
-    f = fopen(filename,"w");
-    fprintf(f, "P5\n%d %d\n%d\n", xsize, ysize, 255);
-    for (i = 0; i < ysize; i++)
-        fwrite(buf + i * wrap, 1, xsize, f);
-    fclose(f);
-}
+//static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
+//                     char *filename)
+//{
+//    FILE *f;
+//    int i;
+//
+//    f = fopen(filename,"w");
+//    fprintf(f, "P5\n%d %d\n%d\n", xsize, ysize, 255);
+//    for (i = 0; i < ysize; i++)
+//        fwrite(buf + i * wrap, 1, xsize, f);
+//    fclose(f);
+//}
 
 
 int main(int argc, char *argv[])
@@ -157,7 +157,8 @@ int main(int argc, char *argv[])
 
     recording = 1;
     //int got_picture = 0;
-    char filename_buf[1024];
+    //char filename_buf[1024];
+    FILE *pFile = fopen("test_640_480_yuv420.yuv", "wb");//不存图片了 直接存成yuv视频,播放的时候 ffplay -f rawvideo -pixel_format yuv420p -s 640*480 test_640_480_yuv420.yuv
     while (recording == 1) {
         if (av_read_frame(pFormatCtx, pkt) >= 0) {
             if (pkt->stream_index == videoindex) {
@@ -197,10 +198,19 @@ int main(int argc, char *argv[])
                     //the picture is allocated by the decoder. no need to free it
 
                     printf("saving frame %3d\n", pCodecCtx->frame_number);
-                    fflush(stdout);
-                    snprintf(filename_buf, sizeof(filename_buf), "%s-%d", "decoded", pCodecCtx->frame_number);
-                    //这里使用 pgm_save 只保存了灰度信息
-                    pgm_save(pFrameYUV->data[0], pFrameYUV->linesize[0], pFrameYUV->width, pFrameYUV->height, filename_buf);
+                    //fflush(stdout);
+                    //snprintf(filename_buf, sizeof(filename_buf), "%s-%d", "decoded", pCodecCtx->frame_number);
+                    ////这里使用 pgm_save 只保存了灰度信息
+                    //pgm_save(pFrameYUV->data[0], pFrameYUV->linesize[0], pFrameYUV->width, pFrameYUV->height, filename_buf);
+                    for (int tt = 0; tt < pFrameYUV->height; tt++) {    //y
+                        fwrite(pFrameYUV->data[0] + tt * pFrameYUV->linesize[0], sizeof(char), pFrameYUV->width, pFile);
+                    }
+                    for (int tt = 0; tt < pFrameYUV->height/2; tt++) {  //u
+                        fwrite(pFrameYUV->data[1] + tt * pFrameYUV->linesize[1], sizeof(char), pFrameYUV->width/2, pFile);
+                    }
+                    for (int tt = 0; tt < pFrameYUV->height/2; tt++) {  //v
+                        fwrite(pFrameYUV->data[2] + tt * pFrameYUV->linesize[2], sizeof(char), pFrameYUV->width/2, pFile);
+                    }
                 }
             }
         }
@@ -227,10 +237,22 @@ int main(int argc, char *argv[])
                     pFrameYUV->data, pFrameYUV->linesize);
 
         printf("saving frame %3d\n", pCodecCtx->frame_number);
-        fflush(stdout);
-        snprintf(filename_buf, sizeof(filename_buf), "%s-%d", "decoded", pCodecCtx->frame_number);
-        pgm_save(pFrame->data[0], pFrame->linesize[0], pFrame->width, pFrame->height, filename_buf);
+        //fflush(stdout);
+        //snprintf(filename_buf, sizeof(filename_buf), "%s-%d", "decoded", pCodecCtx->frame_number);
+        //pgm_save(pFrame->data[0], pFrame->linesize[0], pFrame->width, pFrame->height, filename_buf);
+        for (int tt = 0; tt < pFrameYUV->height; tt++) {    //y
+            fwrite(pFrameYUV->data[0] + tt * pFrameYUV->linesize[0], sizeof(char), pFrameYUV->width, pFile);
+        }
+        for (int tt = 0; tt < pFrameYUV->height/2; tt++) {  //u
+            fwrite(pFrameYUV->data[1] + tt * pFrameYUV->linesize[1], sizeof(char), pFrameYUV->width/2, pFile);
+        }
+        for (int tt = 0; tt < pFrameYUV->height/2; tt++) {  //v
+            fwrite(pFrameYUV->data[2] + tt * pFrameYUV->linesize[2], sizeof(char), pFrameYUV->width/2, pFile);
+        }
     }
+
+    printf("here we quit.\n");
+    fclose(pFile);
 
     sws_freeContext(img_convert_ctx);
     av_frame_free(&pFrameYUV);
