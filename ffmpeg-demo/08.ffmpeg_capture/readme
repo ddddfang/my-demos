@@ -5,5 +5,22 @@
   采集 video 后通过 ffmpeg api 调用 x264 进行了编码
 
 
+
 关于音频的采集,参考这里
 https://blog.csdn.net/quange_style/article/details/90105795
+
+
+
+pcm2aac
+想对PCM进行编码得aac先确保PCM是AV_SAMPLE_FMT_FLTP类型的(ffmpeg要求的,faac不要求) 所以我们加了 swr
+
+pcm编码得到 aac(或者 mp2,将 output文件名后缀改成 .mp2，并且 find encoder 时给入 AV_CODEC_ID_MP2 即可)
+avformat_write_header + av_write_frame + av_write_trailer 是写入.ts.flv.avi等格式的流(混流也是这个方式)
+要是 直接 fwrite 就是裸流
+
+但是有问题:
+1.  时长不对, 此问题只在 aac 情况下存在 mp2 下是正常的,(在csdn下看到有人遇到相同的问题)
+2.  EAGAIN, 按理应该 nb_samples 满足要求了，为啥还是返回 EAGAIN 呢? 这导致我们不得不加上 goto 继续读取(使用老接口 avcodec_encode_audio2 貌似没问题)
+    看 doc/examples/下 encode_audio 都是可以直接推算的
+
+my-demos/faac 下有使用faac库编码pcm得到aac的例子,超级简单，而且得到的数据没有问题

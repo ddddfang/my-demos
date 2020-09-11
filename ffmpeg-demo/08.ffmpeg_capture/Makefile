@@ -1,5 +1,6 @@
 MODULE_BIN1 = video_capture
 MODULE_BIN2 = audio_capture
+MODULE_BIN3 = pcm2aac
 
 ##MODULE_OBJS += $(patsubst %.c,%.o ,$(wildcard ./*.c))
 #MODULE_SRCS = $(shell find . -name "*.c")
@@ -7,6 +8,7 @@ MODULE_BIN2 = audio_capture
 
 MODULE_OBJS1 += ./ffCameraReader.o
 MODULE_OBJS2 += ./ffMicroReader.o
+MODULE_OBJS3 += ./pcm2aac.o
 
 CC = gcc
 OUT_DIR = .
@@ -17,7 +19,7 @@ LDFLAGS+= -lavcodec -lavdevice -lavfilter -lavformat -lavutil -lswresample -lsws
 MODULE_INCLUDE = -I.
 MODULE_INCLUDE += -I/usr/local/include
 
-all : clean $(MODULE_BIN1) $(MODULE_BIN2)
+all : clean $(MODULE_BIN1) $(MODULE_BIN2) $(MODULE_BIN3)
 	@echo "done."
 
 $(MODULE_BIN1) : $(MODULE_OBJS1)
@@ -26,11 +28,16 @@ $(MODULE_BIN1) : $(MODULE_OBJS1)
 $(MODULE_BIN2) : $(MODULE_OBJS2)
 	$(CC) $(MODULE_OBJS2) $(PUBLIC_FLAGS) $(LDFLAGS) -o $(OUT_DIR)/$(MODULE_BIN2)
 
+$(MODULE_BIN3) : $(MODULE_OBJS3)
+	$(CC) $(MODULE_OBJS3) $(PUBLIC_FLAGS) $(LDFLAGS) -o $(OUT_DIR)/$(MODULE_BIN3)
+
 %.o: %.c
 	$(CC) $(PUBLIC_FLAGS) $(MODULE_INCLUDE) -c $< -o $@
 
 clean:
 	-rm -f $(OUT_DIR)/$(MODULE_BIN1)
 	-rm -f $(OUT_DIR)/$(MODULE_BIN2)
+	-rm -f $(OUT_DIR)/$(MODULE_BIN3)
 	-rm -f $(MODULE_OBJS1)
 	-rm -f $(MODULE_OBJS2)
+	-rm -f $(MODULE_OBJS3)

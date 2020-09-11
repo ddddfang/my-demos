@@ -1,0 +1,13 @@
+编译安装就直接 
+
+cd /home/fang/ffmpeg/faac-1.29.9.2
+
+./configure
+make 
+sudo make install
+
+
+然后 faac 就被安装在 /usr/local/lib/ 下了
+
+ffmpeg-demo/08.ffmpeg_capture 下有一个使用 ffmpeg api将 pcm数据转化得到 aac/mp2
+的例子。但是转换得到 aac 的case有一些问题，最后半截声音貌似没有了
