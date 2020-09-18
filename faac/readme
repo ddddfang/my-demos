@@ -11,3 +11,5 @@ sudo make install
 
 ffmpeg-demo/08.ffmpeg_capture 下有一个使用 ffmpeg api将 pcm数据转化得到 aac/mp2
 的例子。但是转换得到 aac 的case有一些问题，最后半截声音貌似没有了
+
+看起来这个 faac 自带了 SwrContext resample的功能?
