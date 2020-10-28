@@ -24,3 +24,9 @@ avformat_write_header + av_write_frame + av_write_trailer 是写入.ts.flv.avi�
     看 doc/examples/下 encode_audio 都是可以直接推算的
 
 my-demos/faac 下有使用faac库编码pcm得到aac的例子,超级简单，而且得到的数据没有问题
+
+
+ubuntu查看系统中包含那些audio声卡
+https://blog.csdn.net/tang_chuanlin/article/details/86081102
+
+ffMicroReader_bad.c 想展示 swr的用法的，但是看起来效果并不好
